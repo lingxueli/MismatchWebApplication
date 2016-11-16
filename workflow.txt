@@ -1,0 +1,94 @@
+table:
+user:
+user_id		username	password	firstname	lastname
+
+topic:
+topic_id	name	category_id
+
+category:
+category_id		name
+
+response:
+response_id		user_id		topic_id 	response
+
+workflow:
+1. get the response of myself
+2. loop through other users' response one by one
+	for each user:
+		compute match score
+		if it is potential match(min score)
+			store this user info into variable
+3. show best match user's profile
+
+
+implementation:
+1. get my response:
+$query = select topic_id, response from response where user_id = '$_SESSION['yourUserId']'
+$data = query($query)
+
+while($row = fetchByRow($data)){
+	push $row to array($user_response);
+}
+
+2. get user id of all the other users
+$query = select user_id from user where user_id != '$_SESSION['yourUserId']'
+$data = query($query)
+
+3. loop through other users one by one
+
+while($row = fetchByRow($data)){
+	$query = select topic_id, response, (topic_name, category_name) from response (inner join topics & categories table)where user_id = $row['user_id'];
+	$data2 = query($query);
+	while($row2 = fetchByRow($data2)){
+		push $row2 into array($matchUser_responses);
+	}
+	
+	// loop through each topic, accumulate 1 by 1 to compute match score
+	for($i = 0; $i < count($user_response); i++){
+		if($user_response[$i]['response'] + $matchUser_responses[$i]['response'] == 3){
+			$score += 1;
+			push $user_response[$i]['topic'] to array($matchTopics)
+			push $user_response[$i]['category'] to array($matchCategories)
+		}
+
+		if($score < $minScore){
+			$minScore = $score
+			$minUser_id = $row['user_id'];
+			copy match topics to $minUser_topics 
+			copy match category to $minUser_Categories
+		}
+	}
+}
+
+$query = "select username, first_name, last_name, city, state, picture from user where user_id = '$minUser_id'"
+
+show user info, match topics & category (i.e. $minUser_topics $minUser_Categories)
+
+
+abstraction:
+
+$your_responses <= select topic_id, response, (topic_name) from reponse where user_id = yourself
+
+$other_users <= select user_id from user where user_id != yourself
+
+while($other_user = fetchByRow($other_users)){
+	 $otherUser_responses <= select topic_id, response from reponse where user_id = $other_user
+	 $minScore = MAX;
+	 // go through response for all topics 1 by 1
+	 for($i = 0; $i < count($your_response); $){
+	 	 if($otherUser_responses[$i]['response'] + $your_responses[$i]['response'] == 3) {
+	 	 	$score += 1
+	 	 	push match topic $your_response[$i]['topic_name'] to array $potential_match_topics
+ 	 	 }
+ 	 	 if($score < $minScore){
+ 	 	 	$minScore = $score
+ 	 	 	$match_userId = $otherUser_responses[$i]['user_id']
+ 	 	 	$match_topics <= $potential_match_topics
+ 	 	 }
+	 }
+}
+
+show match user info & match topics;
+
+
+
